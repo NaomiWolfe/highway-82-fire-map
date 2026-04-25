@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Highway 82 Fire — Interactive Map</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<style>
+  :root{
+    --bg:#0e1116; --panel:#161b22; --panel2:#1f2630; --ink:#e6edf3; --ink2:#9aa6b2;
+    --line:#30363d; --warn:#f59e0b; --danger:#ef4444; --safe:#10b981; --info:#60a5fa;
+    --fire:#ff5630;
+  }
+  button.scn{background:#1f2630;color:#cbd5e1;border:1px solid #30363d;border-radius:6px;padding:6px 9px;font-size:12px;cursor:pointer}
+  button.scn:hover{border-color:#60a5fa;color:#fff}
+  button.scn.active{background:#2a3f5f;border-color:#60a5fa;color:#fff}
+  .home-label{background:rgba(96,165,250,.95);color:#0e1116;font-weight:700;font-size:11px;padding:3px 7px;border-radius:4px;border:1px solid #fff;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.6)}
+  .dist-label{background:#0e1116;color:#fff;font-weight:700;font-size:12px;padding:4px 8px;border-radius:4px;border:1px solid #ff5630;white-space:nowrap;box-shadow:0 0 8px rgba(255,86,48,.5)}
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%;background:var(--bg);color:var(--ink);font:14px/1.45 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif}
+  #app{display:grid;grid-template-columns:340px 1fr;height:100vh}
+  @media (max-width: 820px){
+    #app{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+    #panel{max-height:46vh;overflow:auto;border-right:none;border-bottom:1px solid var(--line)}
+  }
+  #panel{background:var(--panel);border-right:1px solid var(--line);overflow:auto}
+  #panel header{padding:16px 18px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#1a2230, #161b22)}
+  #panel h1{margin:0 0 4px;font-size:17px;letter-spacing:.2px}
+  #panel .sub{color:var(--ink2);font-size:12px}
+  .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.3px}
+  .pill.fire{background:rgba(255,86,48,.15);color:#ffb199;border:1px solid rgba(255,86,48,.4)}
+  .pill.warn{background:rgba(245,158,11,.15);color:#fbcf6c;border:1px solid rgba(245,158,11,.4)}
+  .pill.ok{background:rgba(16,185,129,.15);color:#7eead0;border:1px solid rgba(16,185,129,.4)}
+  .section{padding:14px 18px;border-bottom:1px solid var(--line)}
+  .section h2{font-size:12px;text-transform:uppercase;letter-spacing:1.4px;color:var(--ink2);margin:0 0 10px}
+  .stat{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px dashed #2a313b}
+  .stat:last-child{border-bottom:none}
+  .stat .k{color:var(--ink2)}
+  .stat .v{font-weight:600}
+  .legend{display:flex;flex-direction:column;gap:8px}
+  .legend .row{display:flex;align-items:center;gap:10px;font-size:13px}
+  .swatch{width:16px;height:10px;border-radius:2px;border:1px solid rgba(255,255,255,.15)}
+  .toggle{display:flex;align-items:center;gap:8px;padding:6px 0;cursor:pointer;user-select:none}
+  .toggle input{accent-color:#60a5fa}
+  .arrow{display:inline-block;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:9px solid var(--info);transform-origin:center;vertical-align:middle;margin-right:6px}
+  #map{height:100%}
+  .map-attr{font-size:11px;color:#9aa6b2}
+  .src{color:#9ec5fe;text-decoration:none}
+  .src:hover{text-decoration:underline}
+  .wind-list{max-height:170px;overflow:auto;font-size:12px;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:8px}
+  .wind-list div{display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px dashed #2a313b}
+  .wind-list div:last-child{border:none}
+  .footer{padding:14px 18px;color:var(--ink2);font-size:11px;line-height:1.5}
+  .leaflet-popup-content-wrapper{background:#0f1620;color:#e6edf3;border:1px solid #2a3340}
+  .leaflet-popup-tip{background:#0f1620}
+  .leaflet-popup-content{margin:10px 12px}
+  .leaflet-popup-content h3{margin:0 0 4px;font-size:14px}
+  .leaflet-popup-content p{margin:2px 0;font-size:12px;color:#cbd5e1}
+  .home-marker{filter:drop-shadow(0 0 6px rgba(96,165,250,.7))}
+</style>
+</head>
+<body>
+<div id="app">
+  <aside id="panel">
+    <header>
+      <h1>Highway 82 Fire <span class="pill fire">ACTIVE</span></h1>
+      <div class="sub" style="color:#ff8a8a;font-weight:600;margin-top:4px">🚨 13,739 ac · Glynn evac active · Wayne Co. evac added Apr 25</div>
+      <div class="sub">Brantley · Wayne · Glynn Counties, GA · updated Apr 25, 2026 · 5:40 PM</div>
+    </header>
+
+    <div class="section">
+      <h2>Fire status</h2>
+      <div class="stat"><span class="k">Size</span><span class="v">~13,739 acres</span></div>
+      <div class="stat"><span class="k">Containment</span><span class="v">10%</span></div>
+      <div class="stat"><span class="k">Perimeter</span><span class="v">14.8 sq mi</span></div>
+      <div class="stat"><span class="k">Homes destroyed (region)</span><span class="v">120+</span></div>
+      <div class="stat"><span class="k">Started</span><span class="v">Apr 21, 2026</span></div>
+      <div class="stat"><span class="k">Cause</span><span class="v">Mylar balloon on power line</span></div>
+      <div class="stat"><span class="k">Cmd team</span><span class="v">Southern Area Red Team 1</span></div>
+    </div>
+
+    <div class="section">
+      <h2>Distances via Hwy 82</h2>
+      <div class="stat"><span class="k">Fire edge → home (straight line)</span><span class="v" style="color:#ffb199">11.0 mi</span></div>
+      <div class="stat"><span class="k">Fire edge → home (driving via Hwy 82)</span><span class="v" id="d1">—</span></div>
+      <div class="stat"><span class="k">Fire epicenter (Atkinson) → home (driving)</span><span class="v" id="d2">—</span></div>
+      <div class="sub" style="margin-top:6px">Driving via US‑82 / I‑95. The orange dashed line on the map is straight-line; blue lines are road routes.</div>
+    </div>
+
+    <div class="section">
+      <h2>Projected scenarios</h2>
+      <div class="sub" style="margin-bottom:8px">Wind-driven spread cones from the current eastern fire edge under three plausible 24–48 hr scenarios. Cone radius = ~3 mph spread × duration. Switch scenarios:</div>
+      <div id="scenario-buttons" style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="scn" data-s="current">Current SW wind</button>
+        <button class="scn" data-s="shift">East-shift (worst case)</button>
+        <button class="scn" data-s="sunday">Sunday W/NW + rain</button>
+        <button class="scn" data-s="none">Hide</button>
+      </div>
+      <div id="scenario-desc" class="sub" style="margin-top:8px"></div>
+    </div>
+
+    <div class="section">
+      <h2>Wind & weather</h2>
+      <div id="wind-now" class="stat"><span class="k">Now (fire area)</span><span class="v">—</span></div>
+      <div class="sub" style="margin:6px 0 8px">Arrows on map show wind direction (where it's blowing toward) at the fire and at Brunswick. Saturday gusts to 20 mph SW were forecast; rain chance climbs Sunday.</div>
+      <div class="wind-list" id="wind-list"></div>
+    </div>
+
+    <div class="section">
+      <h2>Layers</h2>
+      <label class="toggle"><input type="checkbox" id="t-perimeter" checked> Fire perimeter (approx.)</label>
+      <label class="toggle"><input type="checkbox" id="t-evac" checked> Brantley mandatory evacuations</label>
+      <label class="toggle"><input type="checkbox" id="t-wayne-mand" checked> 🚨 Wayne MANDATORY evac (Apr 25)</label>
+      <label class="toggle"><input type="checkbox" id="t-glynn-mand" checked> 🚨 Glynn MANDATORY evac (Apr 25)</label>
+      <label class="toggle"><input type="checkbox" id="t-glynn" checked> Glynn County readiness zone</label>
+      <label class="toggle"><input type="checkbox" id="t-routes" checked> Hwy 82 evacuation routes</label>
+      <label class="toggle"><input type="checkbox" id="t-closures" checked> Road closures</label>
+      <label class="toggle"><input type="checkbox" id="t-wind" checked> Wind direction overlay</label>
+      <label class="toggle"><input type="checkbox" id="t-trigger" checked> 5-mi trigger line (home)</label>
+    </div>
+
+    <div class="section">
+      <h2>Legend</h2>
+      <div class="legend">
+        <div class="row"><span class="swatch" style="background:rgba(255,86,48,.55);border-color:#ff5630"></span> Fire perimeter</div>
+        <div class="row"><span class="swatch" style="background:rgba(239,68,68,.35);border-color:#ef4444"></span> Mandatory evacuation</div>
+        <div class="row"><span class="swatch" style="background:rgba(245,158,11,.25);border-color:#f59e0b"></span> Readiness / warning zone</div>
+        <div class="row"><span class="swatch" style="background:#3b82f6"></span> Hwy 82 / I‑95 route</div>
+        <div class="row"><span class="swatch" style="background:#000;border:2px dashed #ef4444"></span> Road closure</div>
+        <div class="row"><span class="arrow"></span> Wind direction (toward)</div>
+        <div class="row"><span class="swatch" style="background:transparent;border:2px dashed #facc15"></span> 5-mi trigger line</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      Sources:
+      <a class="src" href="https://app.watchduty.org/i/94228" target="_blank">Watch Duty</a> ·
+      <a class="src" href="https://gatrees.org/current-wildfire-information-and-resources/" target="_blank">GA Forestry Commission</a> ·
+      <a class="src" href="https://www.facebook.com/BrantleyCountySO" target="_blank">Brantley County Sheriff</a> ·
+      <a class="src" href="https://www.glynncounty.org/news/glynn-county-encourages-residents-stay-prepared-potential-changes-conditions" target="_blank">Glynn County</a> ·
+      <a class="src" href="https://forecast.weather.gov/MapClick.php?zoneid=GAZ152" target="_blank">NWS</a>.
+      <br><br>
+      This map is an informational overview. Perimeter and evacuation polygons are approximate and digitized from official descriptions; for life-safety decisions follow Brantley County Sheriff and Watch Duty alerts directly.
+    </div>
+  </aside>
+
+  <div id="map"></div>
+</div>
+
+<script>
+// ----- Anchor coordinates -----
+const HOME = [31.22978, -81.58492];           // 112 Hickory Pine area, Oak Grove (Brunswick)
+const ATKINSON = [31.22328, -81.85261];        // Hwy 82 / Hwy 110 — fire epicenter
+const WAYNESVILLE = [31.22753, -81.78873];     // current eastern fire-front frontier
+const NAHUNTA = [31.20439, -81.98123];
+const BROWNTOWN = [31.22999, -81.79022];
+const BRUNSWICK = [31.14995, -81.49149];
+
+// ----- Map setup -----
+const map = L.map('map', { zoomControl: true }).setView([31.215, -81.74], 11);
+L.control.scale({imperial:true, metric:false}).addTo(map);
+
+const dark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; OSM &copy; CARTO', subdomains:'abcd', maxZoom:19
+}).addTo(map);
+const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+  attribution:'Esri World Imagery', maxZoom:19
+});
+L.control.layers({ "Dark": dark, "Satellite": sat }, null, {position:'topright', collapsed:true}).addTo(map);
+
+// ----- Approx fire perimeter (digitized from descriptions: from Hwy 110 corridor near Atkinson north toward Browntown / Lane Cemetery, east of Satilla River) -----
+const perimeter = L.polygon([
+  [31.2050, -81.8870],  // SW: Atkinson / Hwy 110 south
+  [31.1950, -81.8500],  // S: south of Hwy 82 toward Satilla
+  [31.2000, -81.8150],  // SE: Satilla River bend
+  [31.2150, -81.7800],  // E: pushed to Browntown Rd & Pine Ct
+  [31.2400, -81.7700],  // ENE: now closer to Glynn line
+  [31.2700, -81.7800],  // NE: into Wayne County
+  [31.3000, -81.8200],  // N: Wayne County advance (Wire/Post Rd corridor)
+  [31.2950, -81.8650],  // NW: Wayne/Brantley line
+  [31.2700, -81.8900],  // W: Hwy 110 north
+  [31.2400, -81.8950]   // SW-W
+], { color:'#ff5630', weight:2, fillColor:'#ff5630', fillOpacity:.35, className:'fire-perim' })
+  .bindPopup('<h3>Fire perimeter (approx.)</h3><p>~13,739 acres · 10% contained · 14.8 sq mi. Fire grew significantly Apr 25, pushing east to Browntown Rd & Pine Court and north into Wayne County.</p>');
+
+// ----- Brantley mandatory evacuation zone (expanded Apr 25 — added Little Memorial Rd → Wire Rd, Thrower Rd → Mossy Oak) -----
+const evacBrantley = L.polygon([
+  [31.2050, -81.8920],
+  [31.1950, -81.8520],
+  [31.2030, -81.8050],
+  [31.2280, -81.7780],
+  [31.2630, -81.7900],
+  [31.2850, -81.8100],   // expanded N: Little Memorial Rd / Wire Rd corridor
+  [31.2820, -81.8500],   // expanded N: Thrower Rd → Mossy Oak
+  [31.2580, -81.8780],
+  [31.2330, -81.8950]
+], { color:'#ef4444', weight:1.5, dashArray:'4,3', fillColor:'#ef4444', fillOpacity:.22 })
+  .bindPopup('<h3>Brantley County — mandatory evacuation (expanded Apr 25)</h3>'+
+    '<p>Includes Browntown Rd (Hwy 82 → Greenleaf and to Old Post Rd / Hwy 32 → Hwy 110), Hwy 110 (Yellow Pine Rd → Thrower Rd; Hwy 32 → Lane Cemetery to Satilla River; Coffee Co. Club Rd → Drury Lane), Happy Hollow, Drury Ln/Ct, Atkinson Rd, Godberry Ln, Brushing Creek, Oak Woodlands, Warners Landing, Fort McIntosh → Hwy 520, Hawks Landing.</p>'+
+    '<p><b>Apr 25 expansion:</b> County line near Little Memorial Rd → Wire Rd, between Hwy 32 and Post Rd, extending north back to county line; Thrower Rd → Mossy Oak.</p>'+
+    '<p>Curfew 8:30 PM – 6:30 AM east of the Satilla River.</p>');
+
+// ----- Wayne County MANDATORY evacuation (issued Apr 25, 2026) -----
+// From Brantley County Line at Wire Rd, to Post Rd, to Ten Mile Rd
+const evacWayne = L.polygon([
+  [31.2900, -81.8400],   // Brantley line at Wire Rd
+  [31.2950, -81.7900],   // east toward Post Rd
+  [31.3250, -81.7950],   // north along Post Rd
+  [31.3400, -81.8350],   // Ten Mile Rd
+  [31.3300, -81.8700],   // back west
+  [31.3000, -81.8650]    // back to county line
+], { color:'#ef4444', weight:2, dashArray:'4,3', fillColor:'#ef4444', fillOpacity:.28 })
+  .bindPopup('<h3 style="color:#ff8a8a">🚨 Wayne County — MANDATORY EVACUATION</h3>'+
+    '<p><b>Issued Saturday, April 25, 2026.</b> From Brantley County line at Wire Rd, to Post Rd, to Ten Mile Rd.</p>'+
+    '<p>Source: Watch Duty / Wayne County EMA.</p>');
+
+// ----- Glynn County MANDATORY evacuation (issued Apr 25, 2026) -----
+// Boundary per Glynn County: Old Post Rd → Hwy 32 → Thalman Park Ln → Bladen Rd → Old Post Rd
+// Approximation: NW corner of Glynn near the Brantley line, around Thalmann community.
+const evacGlynnMandatory = L.polygon([
+  [31.2243, -81.7638], // Old Post Rd at Glynn line
+  [31.2296, -81.6900], // Hwy 32 east toward Thalmann
+  [31.2935, -81.6896], // up to Thalman Park area
+  [31.2870, -81.7550], // Bladen Rd west
+  [31.2440, -81.7640]  // back to Old Post Rd
+], { color:'#ef4444', weight:2, fillColor:'#ef4444', fillOpacity:.32 })
+  .bindPopup('<h3 style="color:#ff8a8a">🚨 Glynn County — MANDATORY EVACUATION</h3>'+
+    '<p><b>Issued Saturday, April 25, 2026.</b> Order applies to residents within: Old Post Rd → Hwy 32 → Thalman Park Ln → Bladen Rd → back to Old Post Rd. This is the NW corner of Glynn near Thalmann, closest to the Brantley line.</p>'+
+    '<p>Source: Glynn County Communications.</p>');
+
+// Original readiness/warning zone (Hwy 82 ↔ Hwy 32 from Old Post Rd to Hwy 99; Old Post ↔ Buck Swamp Rd south of 82)
+const evacGlynn = L.polygon([
+  [31.2400, -81.7400],
+  [31.2050, -81.7400],
+  [31.1700, -81.6500],
+  [31.1700, -81.5600],
+  [31.2200, -81.5400],
+  [31.2700, -81.5800],
+  [31.2700, -81.6800]
+], { color:'#f59e0b', weight:1.5, dashArray:'4,3', fillColor:'#f59e0b', fillOpacity:.18 })
+  .bindPopup('<h3>Glynn County — readiness / warning</h3>'+
+    '<p>Residents between Hwy 82 ↔ Hwy 32 from Old Post Rd to Hwy 99, and between Old Post Rd ↔ Buck Swamp Rd south of Hwy 82, should prepare to evacuate.</p>');
+
+// ----- Road closures -----
+const closures = L.layerGroup([
+  L.polyline([[31.2030,-81.9810],[31.2225,-81.7900]], {color:'#ef4444', weight:4, dashArray:'6,5'})
+    .bindPopup('<h3>US‑82 closure</h3><p>From Hwy 301 (Nahunta) to Browntown Rd — heavy smoke and accidents. Intermittent reopenings.</p>'),
+  L.polyline([[31.2330,-81.8530],[31.1950,-81.8530]], {color:'#ef4444', weight:4, dashArray:'6,5'})
+    .bindPopup('<h3>GA‑110 W closure</h3><p>Hwy 32 down to Camden County line.</p>'),
+  L.polyline([[31.2225,-81.8120],[31.1900,-81.8120]], {color:'#ef4444', weight:4, dashArray:'6,5'})
+    .bindPopup('<h3>GA‑259 closure</h3><p>Hwy 82 to Camden County line.</p>'),
+  L.polyline([[31.2540,-81.8530],[31.2540,-81.8050]], {color:'#ef4444', weight:4, dashArray:'6,5'})
+    .bindPopup('<h3>GA‑32 closure</h3><p>Hwy 110 to Post Rd.</p>'),
+  // Apr 25 expansion: SR 32 from Hortense to SR 99
+  L.polyline([[31.2700,-81.7350],[31.2540,-81.8050]], {color:'#ef4444', weight:4, dashArray:'6,5'})
+    .bindPopup('<h3>SR 32 closure (expanded Apr 25)</h3><p>From Hortense to SR 99.</p>'),
+  // Apr 25 expansion: SR 110 from SR 32 to US 17
+  L.polyline([[31.2540,-81.8530],[31.2540,-81.5400]], {color:'#ef4444', weight:4, dashArray:'6,5'})
+    .bindPopup('<h3>SR 110 closure (expanded Apr 25)</h3><p>From SR 32 east to US 17.</p>'),
+  // Apr 25: Hwy 110W from Hwy 32 to Hwy 82
+  L.polyline([[31.2540,-81.8530],[31.2225,-81.8530]], {color:'#ef4444', weight:4, dashArray:'6,5'})
+    .bindPopup('<h3>Hwy 110 W closure (Apr 25)</h3><p>From Hwy 32 to Hwy 82.</p>')
+]);
+
+// ----- Markers -----
+const homeIcon = L.divIcon({
+  className:'home-marker',
+  html:'<div style="background:#60a5fa;color:#0e1116;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;border:2px solid #fff">H</div>',
+  iconSize:[22,22], iconAnchor:[11,11]
+});
+const fireIcon = L.divIcon({
+  html:'<div style="background:#ff5630;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;border:2px solid #fff">🔥</div>',
+  iconSize:[22,22], iconAnchor:[11,11]
+});
+const pinIcon = (label,color) => L.divIcon({
+  className:'pin-label',
+  html:`<div style="background:${color};color:#fff;border-radius:4px;padding:2px 6px;font-weight:700;font-size:11px;border:1px solid rgba(255,255,255,.4);white-space:nowrap;display:inline-block">${label}</div>`,
+  iconSize:[null,null], iconAnchor:[0,0]
+});
+
+L.marker(HOME, {icon:homeIcon}).addTo(map)
+  .bindPopup('<h3>112 Hickory Pine, Brunswick, GA</h3><p>Oak Grove neighborhood, Glynn County. Home anchor for distance calculations.</p>');
+
+// Permanent address label next to home marker
+L.marker(HOME, {
+  icon: L.divIcon({className:'home-label', html:'112 Hickory Pine · Oak Grove', iconSize:[null,null], iconAnchor:[-14, 4]}),
+  interactive:false
+}).addTo(map);
+
+// Fire-to-home distance: line from closest perimeter vertex to home, with mid-line label
+const FIRE_EDGE_NEAREST = [31.240, -81.770]; // closest perimeter vertex after Apr 25 PM expansion
+const FIRE_HOME_MILES = 11.0;
+const distLine = L.polyline([FIRE_EDGE_NEAREST, HOME], {color:'#ff5630', weight:2, dashArray:'8,6', opacity:.85}).addTo(map);
+const MID = [(FIRE_EDGE_NEAREST[0]+HOME[0])/2, (FIRE_EDGE_NEAREST[1]+HOME[1])/2];
+L.marker(MID, {
+  icon: L.divIcon({className:'dist-label', html:`🔥 ${FIRE_HOME_MILES} mi straight-line → home`, iconSize:[null,null], iconAnchor:[90, 12]}),
+  interactive:false
+}).addTo(map);
+
+L.marker(ATKINSON, {icon:fireIcon}).addTo(map)
+  .bindPopup('<h3>Atkinson — fire epicenter</h3><p>Near US‑82 / GA‑110. Active fire behavior; mandatory evacuation in effect.</p>');
+
+L.marker(WAYNESVILLE, {icon:pinIcon('Fire edge','#ef4444')}).addTo(map)
+  .bindPopup('<h3>Active fire-zone edge</h3><p>Eastern fire frontier near Waynesville / Browntown Rd along US‑82. Fire crossed containment lines here Friday afternoon.</p>');
+
+// Browntown: push label well north so it doesn't overlap Fire edge or distance-line labels
+L.marker([31.2680, -81.7800], {icon:pinIcon('Browntown','#9aa6b2')}).addTo(map);
+L.marker(NAHUNTA, {icon:pinIcon('Nahunta','#9aa6b2')}).addTo(map)
+  .bindPopup('<h3>Nahunta</h3><p>Day shelter at Nahunta Methodist Church.</p>');
+L.marker(BRUNSWICK, {icon:pinIcon('Brunswick','#9aa6b2')}).addTo(map);
+
+// ----- Distance/route layer (loaded from routes.json) -----
+const routeLayer = L.layerGroup();
+
+fetch('routes.json').then(r => r.json()).then(routes => {
+  const styles = {
+    fire_zone_to_oakgrove: { color:'#3b82f6', weight:5, opacity:.85 },
+    atkinson_to_oakgrove:  { color:'#22d3ee', weight:4, opacity:.75, dashArray:'6,5' }
+  };
+  const labels = {
+    fire_zone_to_oakgrove: 'Fire-zone edge (Waynesville) → Oak Grove via Hwy 82',
+    atkinson_to_oakgrove:  'Atkinson (fire epicenter) → Oak Grove via Hwy 82'
+  };
+  for (const k of Object.keys(styles)) {
+    const r = routes[k]; if (!r) continue;
+    const line = L.geoJSON(r.geometry, {style: styles[k]})
+      .bindPopup(`<h3>${labels[k]}</h3><p><b>${r.miles} mi</b> · about ${r.minutes} min via US‑82 / I‑95</p>`);
+    line.addTo(routeLayer);
+  }
+  document.getElementById('d1').textContent = (routes.fire_zone_to_oakgrove?.miles ?? '—') + ' mi · ~' + (routes.fire_zone_to_oakgrove?.minutes ?? '—') + ' min';
+  document.getElementById('d2').textContent = (routes.atkinson_to_oakgrove?.miles ?? '—') + ' mi · ~' + (routes.atkinson_to_oakgrove?.minutes ?? '—') + ' min';
+});
+
+routeLayer.addTo(map);
+
+// ----- Wind overlay -----
+const windLayer = L.layerGroup();
+function dirToDeg(dir){
+  const m = {N:0,NNE:22.5,NE:45,ENE:67.5,E:90,ESE:112.5,SE:135,SSE:157.5,S:180,SSW:202.5,SW:225,WSW:247.5,W:270,WNW:292.5,NW:315,NNW:337.5};
+  return m[dir] ?? 0;
+}
+function windArrow(latlng, fromDir, speedTxt){
+  // Wind "from SW" means blowing toward NE: rotate arrow to (fromDeg+180)
+  const deg = (dirToDeg(fromDir) + 180) % 360;
+  const html = `<div style="transform:rotate(${deg}deg);transform-origin:center;display:flex;flex-direction:column;align-items:center">
+      <div style="width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:14px solid #60a5fa;filter:drop-shadow(0 0 4px rgba(96,165,250,.6))"></div>
+      <div style="width:3px;height:22px;background:#60a5fa"></div>
+    </div>
+    <div style="text-align:center;color:#cbd5e1;font-size:11px;margin-top:2px;font-weight:600">${speedTxt}<br><span style="color:#9aa6b2;font-weight:400">from ${fromDir}</span></div>`;
+  return L.marker(latlng, {icon: L.divIcon({html, iconSize:[60,70], iconAnchor:[30,35], className:''})});
+}
+
+fetch('wind.json').then(r=>r.json()).then(w => {
+  const now = w.hourly[0];
+  document.getElementById('wind-now').innerHTML =
+    `<span class="k">Now (fire area)</span><span class="v">${now.windSpeed} from ${now.windDirection}</span>`;
+  // Place wind arrows: fire area + Brunswick
+  // Place wind arrows away from markers/labels: NW of fire perimeter, and NE of Brunswick
+  windArrow([31.275, -81.905], now.windDirection, now.windSpeed).addTo(windLayer)
+    .bindPopup(`<h3>Wind at fire (now)</h3><p>${now.windSpeed} from <b>${now.windDirection}</b> — ${now.shortForecast}.</p><p>Smoke and embers drift toward where the arrow points.</p>`);
+  // Move Brunswick wind arrow further south to avoid the home label
+  windArrow([31.110, -81.500], now.windDirection, now.windSpeed).addTo(windLayer)
+    .bindPopup(`<h3>Wind at Brunswick (now)</h3><p>${now.windSpeed} from <b>${now.windDirection}</b>.</p>`);
+  // Hourly list
+  const list = document.getElementById('wind-list');
+  list.innerHTML = w.hourly.slice(0,18).map(p => {
+    const t = p.startTime.slice(11,16);
+    return `<div><span>${t}</span><span>${p.windSpeed} ${p.windDirection}</span></div>`;
+  }).join('');
+}).catch(()=>{});
+
+windLayer.addTo(map);
+
+// ----- Add layers, hook toggles -----
+perimeter.addTo(map);
+evacBrantley.addTo(map);
+evacWayne.addTo(map);
+evacGlynnMandatory.addTo(map);
+evacGlynn.addTo(map);
+closures.addTo(map);
+
+// Wayne County evac label
+L.marker([31.3200, -81.8300], {
+  icon: L.divIcon({className:'dist-label', html:'🚨 WAYNE MANDATORY EVAC (Apr 25)', iconSize:[null,null], iconAnchor:[110, 12]}),
+  interactive:false
+}).addTo(map);
+
+// Permanent label on the new mandatory Glynn zone
+L.marker([31.272, -81.730], {
+  icon: L.divIcon({className:'dist-label', html:'🚨 GLYNN MANDATORY EVAC (Apr 25)', iconSize:[null,null], iconAnchor:[110, 12]}),
+  interactive:false
+}).addTo(map);
+
+const toggles = [
+  ['t-perimeter', perimeter],
+  ['t-evac', evacBrantley],
+  ['t-wayne-mand', evacWayne],
+  ['t-glynn-mand', evacGlynnMandatory],
+  ['t-glynn', evacGlynn],
+  ['t-routes', routeLayer],
+  ['t-closures', closures],
+  ['t-wind', windLayer],
+  ['t-trigger', null] // wired after triggerRing exists
+];
+for (const [id, layer] of toggles) {
+  if (!layer) continue;
+  const el = document.getElementById(id);
+  el.addEventListener('change', () => {
+    if (el.checked) layer.addTo(map); else map.removeLayer(layer);
+  });
+}
+// Wire trigger line toggle after it's drawn below
+setTimeout(() => {
+  const el = document.getElementById('t-trigger');
+  if (!el) return;
+  el.addEventListener('change', () => {
+    if (el.checked) triggerRing.addTo(map); else map.removeLayer(triggerRing);
+  });
+}, 0);
+
+// ----- Trigger line: 5 mi safety threshold around home -----
+// Any scenario cone crossing this ring is a clear escalation signal.
+const TRIGGER_MI = 5;
+function circlePoints(center, radiusMi, steps=64){
+  const pts = [];
+  for (let i=0;i<=steps;i++){
+    pts.push(destPoint(center[0], center[1], radiusMi, (360*i)/steps));
+  }
+  return pts;
+}
+// destPoint is defined just below — hoist via function declaration:
+function _ensure(){}
+// (drawn after destPoint exists, see below)
+
+// ----- Projected spread scenarios -----
+// Cones extend from the current eastern fire edge toward the wind direction.
+// Spread rate ~3 mph at full alignment with wind (matches reported wind-driven runs).
+const FIRE_EDGE = [31.235, -81.78]; // representative eastern fire edge (advanced east Apr 25 PM)
+
+function destPoint(lat, lon, distMi, bearingDeg){
+  const R = 3958.7613;
+  const br = bearingDeg * Math.PI/180;
+  const lat1 = lat * Math.PI/180, lon1 = lon * Math.PI/180;
+  const dr = distMi / R;
+  const lat2 = Math.asin(Math.sin(lat1)*Math.cos(dr) + Math.cos(lat1)*Math.sin(dr)*Math.cos(br));
+  const lon2 = lon1 + Math.atan2(Math.sin(br)*Math.sin(dr)*Math.cos(lat1), Math.cos(dr)-Math.sin(lat1)*Math.sin(lat2));
+  return [lat2*180/Math.PI, lon2*180/Math.PI];
+}
+function makeCone(origin, bearing, lengthMi, halfAngleDeg){
+  // Build a polygon: origin + arc of points at lengthMi between bearing±halfAngle
+  const pts = [origin];
+  const steps = 16;
+  for (let i=0;i<=steps;i++){
+    const b = bearing - halfAngleDeg + (2*halfAngleDeg)*(i/steps);
+    pts.push(destPoint(origin[0], origin[1], lengthMi, b));
+  }
+  pts.push(origin);
+  return pts;
+}
+
+const scenarios = {
+  current: {
+    label: 'Current SW wind (6 mph, gusts to 20)',
+    desc: 'SW wind through Saturday night pushes the fire toward the ENE — same direction as your home. 24 hr cone reaches partway across Brantley but well short of Glynn at modeled spread.',
+    bearing: 45,    // wind from SW → blowing to NE
+    lengthMi: 6,    // ~3 mph aligned spread × ~24 hr discounted for fuel/firebreaks
+    half: 25,
+    color: '#f59e0b'
+  },
+  shift: {
+    label: 'East-shift (worst case)',
+    desc: 'County manager warned an easterly wind shift could push fire across the Satilla River. This cone shows a 36 hr eastward run from the current edge — the trajectory officials are watching.',
+    bearing: 90,
+    lengthMi: 9,
+    half: 30,
+    color: '#ef4444'
+  },
+  sunday: {
+    label: 'Sunday W/NW + 30–40% rain',
+    desc: 'Forecast wind shifts to W then NW Sunday with rising humidity and a 30–40% rain chance. Spread should slow; cone shown is smaller and trends ESE/SE.',
+    bearing: 120,
+    lengthMi: 4,
+    half: 35,
+    color: '#10b981'
+  }
+};
+
+let scenarioLayer = L.layerGroup().addTo(map);
+function drawScenario(key){
+  scenarioLayer.clearLayers();
+  document.querySelectorAll('button.scn').forEach(b => b.classList.toggle('active', b.dataset.s === key));
+  if (key === 'none') { document.getElementById('scenario-desc').textContent = ''; return; }
+  const s = scenarios[key];
+  const cone = makeCone(FIRE_EDGE, s.bearing, s.lengthMi, s.half);
+  L.polygon(cone, {color: s.color, weight: 1.5, fillColor: s.color, fillOpacity: .22, dashArray:'4,4'})
+    .bindPopup(`<h3>${s.label}</h3><p>${s.desc}</p><p><b>Modeled reach:</b> ~${s.lengthMi} mi from the eastern fire edge.</p>`)
+    .addTo(scenarioLayer);
+  // Center bearing line
+  const tip = destPoint(FIRE_EDGE[0], FIRE_EDGE[1], s.lengthMi, s.bearing);
+  L.polyline([FIRE_EDGE, tip], {color: s.color, weight: 2, opacity:.9}).addTo(scenarioLayer);
+  document.getElementById('scenario-desc').textContent = s.desc;
+}
+document.querySelectorAll('button.scn').forEach(b => {
+  b.addEventListener('click', () => drawScenario(b.dataset.s));
+});
+drawScenario('current');
+
+// Now draw the trigger ring (uses destPoint defined above)
+const triggerRing = L.polygon(circlePoints(HOME, TRIGGER_MI), {
+  color:'#facc15', weight:2, dashArray:'2,6', fill:false, opacity:.9
+}).bindPopup(`<h3>Trigger line — ${TRIGGER_MI} mi from home</h3><p>If any projected spread cone or actual fire perimeter crosses this ring, treat it as an escalation signal: pre-pack go-bags, fuel vehicles, and watch official channels for evac warnings on the Glynn side.</p>`).addTo(map);
+// Place the trigger-line label NORTH of home so it doesn't collide with distance label or wind arrow
+L.marker(destPoint(HOME[0], HOME[1], TRIGGER_MI, 0), {
+  icon: L.divIcon({className:'home-label', html:`⚠️ ${TRIGGER_MI}-mi trigger line`, iconSize:[null,null], iconAnchor:[55, -6]}),
+  interactive:false
+}).addTo(map);
+
+// Fit to a sensible bounding box that includes home + fire
+map.fitBounds(L.latLngBounds([HOME, [31.35,-81.99], [31.15,-81.55]]).pad(0.05));
+</script>
+</body>
+</html>
