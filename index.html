@@ -65,8 +65,8 @@
   <aside id="panel">
     <header>
       <h1>Highway 82 Fire <span class="pill fire">ACTIVE</span></h1>
-      <div class="sub" style="color:#ff8a8a;font-weight:600;margin-top:4px">🚨 13,739 ac · Glynn evac active · Wayne Co. evac added Apr 25</div>
-      <div class="sub">Brantley · Wayne · Glynn Counties, GA · updated Apr 25, 2026 · 5:40 PM</div>
+      <div class="sub" style="color:#ff8a8a;font-weight:600;margin-top:4px">🚨 13,739 ac · Glynn voluntary advisory + Red Cross shelter (Apr 25)</div>
+      <div class="sub">Brantley · Wayne · Glynn Counties, GA · updated Apr 25, 2026 · 7:56 PM</div>
     </header>
 
     <div class="section">
@@ -113,6 +113,7 @@
       <label class="toggle"><input type="checkbox" id="t-evac" checked> Brantley mandatory evacuations</label>
       <label class="toggle"><input type="checkbox" id="t-wayne-mand" checked> 🚨 Wayne MANDATORY evac (Apr 25)</label>
       <label class="toggle"><input type="checkbox" id="t-glynn-mand" checked> 🚨 Glynn MANDATORY evac (Apr 25)</label>
+      <label class="toggle"><input type="checkbox" id="t-glynn-vol" checked> ⚠️ Glynn VOLUNTARY advisory (Apr 25)</label>
       <label class="toggle"><input type="checkbox" id="t-glynn" checked> Glynn County readiness zone</label>
       <label class="toggle"><input type="checkbox" id="t-routes" checked> Hwy 82 evacuation routes</label>
       <label class="toggle"><input type="checkbox" id="t-closures" checked> Road closures</label>
@@ -228,6 +229,22 @@ const evacGlynnMandatory = L.polygon([
   .bindPopup('<h3 style="color:#ff8a8a">🚨 Glynn County — MANDATORY EVACUATION</h3>'+
     '<p><b>Issued Saturday, April 25, 2026.</b> Order applies to residents within: Old Post Rd → Hwy 32 → Thalman Park Ln → Bladen Rd → back to Old Post Rd. This is the NW corner of Glynn near Thalmann, closest to the Brantley line.</p>'+
     '<p>Source: Glynn County Communications.</p>');
+
+// ----- Glynn County VOLUNTARY evacuation advisory (issued Apr 25, 2026 evening) -----
+// Streets: Alpine Rd, Gilley Rd, Boones Branch, Sallie Cline, Mauney St, Chelsea Cir,
+// Post Rd N of Hwy 82, Old Post Rd N of Hwy 32 — NW Glynn, east/south of the mandatory zone.
+const evacGlynnVoluntary = L.polygon([
+  [31.2740, -81.6850],
+  [31.2740, -81.6300],
+  [31.2300, -81.6150],
+  [31.2050, -81.6300],
+  [31.2050, -81.6800],
+  [31.2296, -81.6900]
+], { color:'#fbbf24', weight:2, dashArray:'6,4', fillColor:'#fbbf24', fillOpacity:.22 })
+  .bindPopup('<h3 style="color:#fbbf24">⚠️ Glynn County — VOLUNTARY evacuation advisory</h3>'+
+    '<p><b>Issued Saturday, April 25, 2026 evening.</b> Voluntary advisory for: Alpine Rd, Gilley Rd, Boones Branch, Sallie Cline, Mauney St, Chelsea Cir, Post Rd N of Hwy 82, Old Post Rd N of Hwy 32.</p>'+
+    '<p>Red Cross shelter open at <b>Selden Park</b>.</p>'+
+    '<p>Source: glynncounty.org</p>');
 
 // Original readiness/warning zone (Hwy 82 ↔ Hwy 32 from Old Post Rd to Hwy 99; Old Post ↔ Buck Swamp Rd south of 82)
 const evacGlynn = L.polygon([
@@ -377,8 +394,21 @@ perimeter.addTo(map);
 evacBrantley.addTo(map);
 evacWayne.addTo(map);
 evacGlynnMandatory.addTo(map);
+evacGlynnVoluntary.addTo(map);
 evacGlynn.addTo(map);
 closures.addTo(map);
+
+// Selden Park Red Cross shelter
+const SHELTER = [31.1738, -81.5210];
+L.marker(SHELTER, {
+  icon: L.divIcon({className:'dist-label', html:'🏠 Red Cross shelter — Selden Park', iconSize:[null,null], iconAnchor:[100, 12]})
+}).addTo(map).bindPopup('<h3>🏠 Red Cross shelter</h3><p><b>Selden Park</b>, Brunswick. Opened Apr 25 evening for those evacuating from the Brantley wildfire.</p>');
+
+// Voluntary advisory label
+L.marker([31.265, -81.650], {
+  icon: L.divIcon({className:'dist-label', html:'⚠️ GLYNN VOLUNTARY ADVISORY', iconSize:[null,null], iconAnchor:[110, 12]}),
+  interactive:false
+}).addTo(map);
 
 // Wayne County evac label
 L.marker([31.3200, -81.8300], {
@@ -397,6 +427,7 @@ const toggles = [
   ['t-evac', evacBrantley],
   ['t-wayne-mand', evacWayne],
   ['t-glynn-mand', evacGlynnMandatory],
+  ['t-glynn-vol', evacGlynnVoluntary],
   ['t-glynn', evacGlynn],
   ['t-routes', routeLayer],
   ['t-closures', closures],
