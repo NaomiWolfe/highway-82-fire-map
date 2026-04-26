@@ -65,8 +65,8 @@
   <aside id="panel">
     <header>
       <h1>Highway 82 Fire <span class="pill fire">ACTIVE</span></h1>
-      <div class="sub" style="color:#ff8a8a;font-weight:600;margin-top:4px">🚨 20,933 ac · Mandatory evacuations active (Apr 26)</div>
-      <div class="sub">Brantley · Wayne · Glynn Counties, GA · updated Apr 26, 2026 · 8:17 AM</div>
+      <div class="sub" style="color:#ff8a8a;font-weight:600;margin-top:4px">🚨 20,933 ac (+52% overnight) · Spot fires Hwy 32 MM12</div>
+      <div class="sub">Brantley · Wayne · Glynn Counties, GA · updated Apr 26, 2026 · 8:25 AM</div>
     </header>
 
     <div class="section">
@@ -82,7 +82,7 @@
 
     <div class="section">
       <h2>Distances via Hwy 82</h2>
-      <div class="stat"><span class="k">Fire edge → home (straight line)</span><span class="v" style="color:#ffb199">11.0 mi</span></div>
+      <div class="stat"><span class="k">Fire edge → home (straight line)</span><span class="v" style="color:#ffb199">9.2 mi ↓</span></div>
       <div class="stat"><span class="k">Fire edge → home (driving via Hwy 82)</span><span class="v" id="d1">—</span></div>
       <div class="stat"><span class="k">Fire epicenter (Atkinson) → home (driving)</span><span class="v" id="d2">—</span></div>
       <div class="sub" style="margin-top:6px">Driving via US‑82 / I‑95. The orange dashed line on the map is straight-line; blue lines are road routes.</div>
@@ -172,18 +172,19 @@ L.control.layers({ "Dark": dark, "Satellite": sat }, null, {position:'topright',
 
 // ----- Approx fire perimeter (digitized from descriptions: from Hwy 110 corridor near Atkinson north toward Browntown / Lane Cemetery, east of Satilla River) -----
 const perimeter = L.polygon([
-  [31.2050, -81.8870],  // SW: Atkinson / Hwy 110 south
-  [31.1950, -81.8500],  // S: south of Hwy 82 toward Satilla
-  [31.2000, -81.8150],  // SE: Satilla River bend
-  [31.2150, -81.7800],  // E: pushed to Browntown Rd & Pine Ct
-  [31.2400, -81.7700],  // ENE: now closer to Glynn line
-  [31.2700, -81.7800],  // NE: into Wayne County
-  [31.3000, -81.8200],  // N: Wayne County advance (Wire/Post Rd corridor)
-  [31.2950, -81.8650],  // NW: Wayne/Brantley line
-  [31.2700, -81.8900],  // W: Hwy 110 north
-  [31.2400, -81.8950]   // SW-W
+  [31.2000, -81.8950],  // SW: Atkinson / Hwy 110 south
+  [31.1900, -81.8500],  // S: south of Hwy 82 toward Satilla
+  [31.1900, -81.8100],  // SSE: pushed slightly south
+  [31.2050, -81.7700],  // SE: past Browntown Rd
+  [31.2300, -81.7400],  // ENE: toward Hwy 32 MM12 area
+  [31.2700, -81.7350],  // NE: Hwy 32 MM12 spot fires zone
+  [31.3000, -81.7600],  // N: Wayne County advance
+  [31.3300, -81.8100],  // N: deeper into Wayne
+  [31.3250, -81.8650],  // NW: Wayne/Brantley line further N
+  [31.2950, -81.8950],  // W: Hwy 110 north
+  [31.2500, -81.9000]   // W
 ], { color:'#ff5630', weight:2, fillColor:'#ff5630', fillOpacity:.35, className:'fire-perim' })
-  .bindPopup('<h3>Fire perimeter (approx.)</h3><p>~20,933 acres · 7% contained · 14.8 sq mi (approx.).</p>');
+  .bindPopup('<h3>Fire perimeter (approx.)</h3><p>~20,933 acres · 7% contained. Grew +52% overnight Apr 25–26. Crossed Browntown Rd in several places; 3 large spot fires reported on both sides of Hwy 32 at Mile Marker 12.</p>');
 
 // ----- Brantley mandatory evacuation zone (expanded Apr 25 — added Little Memorial Rd → Wire Rd, Thrower Rd → Mossy Oak) -----
 const evacBrantley = L.polygon([
@@ -306,8 +307,8 @@ L.marker(HOME, {
 }).addTo(map);
 
 // Fire-to-home distance: line from closest perimeter vertex to home, with mid-line label
-const FIRE_EDGE_NEAREST = [31.240, -81.770]; // closest perimeter vertex after Apr 25 PM expansion
-const FIRE_HOME_MILES = 11.0;
+const FIRE_EDGE_NEAREST = [31.230, -81.740]; // closest perimeter vertex after Apr 26 AM expansion (Hwy 32 MM12)
+const FIRE_HOME_MILES = 9.2;
 const distLine = L.polyline([FIRE_EDGE_NEAREST, HOME], {color:'#ff5630', weight:2, dashArray:'8,6', opacity:.85}).addTo(map);
 const MID = [(FIRE_EDGE_NEAREST[0]+HOME[0])/2, (FIRE_EDGE_NEAREST[1]+HOME[1])/2];
 L.marker(MID, {
@@ -467,7 +468,7 @@ function _ensure(){}
 // ----- Projected spread scenarios -----
 // Cones extend from the current eastern fire edge toward the wind direction.
 // Spread rate ~3 mph at full alignment with wind (matches reported wind-driven runs).
-const FIRE_EDGE = [31.235, -81.78]; // representative eastern fire edge (advanced east Apr 25 PM)
+const FIRE_EDGE = [31.250, -81.74]; // representative eastern fire edge (Hwy 32 MM12 area, Apr 26 AM)
 
 function destPoint(lat, lon, distMi, bearingDeg){
   const R = 3958.7613;
