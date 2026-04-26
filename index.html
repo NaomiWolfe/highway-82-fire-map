@@ -65,13 +65,13 @@
   <aside id="panel">
     <header>
       <h1>Highway 82 Fire <span class="pill fire">ACTIVE</span></h1>
-      <div class="sub" style="color:#ff8a8a;font-weight:600;margin-top:4px">🚨 13,739 ac · Glynn voluntary advisory + Red Cross shelter (Apr 25)</div>
-      <div class="sub">Brantley · Wayne · Glynn Counties, GA · updated Apr 25, 2026 · 8:25 PM</div>
+      <div class="sub" style="color:#ff8a8a;font-weight:600;margin-top:4px">🚨 13,745 ac · Mandatory evacuations active (Apr 26)</div>
+      <div class="sub">Brantley · Wayne · Glynn Counties, GA · updated Apr 26, 2026 · 4:18 AM</div>
     </header>
 
     <div class="section">
       <h2>Fire status</h2>
-      <div class="stat"><span class="k">Size</span><span class="v">~13,739 acres</span></div>
+      <div class="stat"><span class="k">Size</span><span class="v">~13,745 acres</span></div>
       <div class="stat"><span class="k">Containment</span><span class="v" style="color:#ffb199">7% ↓</span></div>
       <div class="stat"><span class="k">Perimeter</span><span class="v">14.8 sq mi</span></div>
       <div class="stat"><span class="k">Homes destroyed (region)</span><span class="v">120+</span></div>
@@ -183,7 +183,7 @@ const perimeter = L.polygon([
   [31.2700, -81.8900],  // W: Hwy 110 north
   [31.2400, -81.8950]   // SW-W
 ], { color:'#ff5630', weight:2, fillColor:'#ff5630', fillOpacity:.35, className:'fire-perim' })
-  .bindPopup('<h3>Fire perimeter (approx.)</h3><p>~13,739 acres · 7% contained · 14.8 sq mi. Fire grew significantly Apr 25, pushing east to Browntown Rd & Pine Court and north into Wayne County. Containment dropped from 10% → 7% by 8 PM.</p>');
+  .bindPopup('<h3>Fire perimeter (approx.)</h3><p>~13,745 acres · 7% contained · 14.8 sq mi (approx.).</p>');
 
 // ----- Brantley mandatory evacuation zone (expanded Apr 25 — added Little Memorial Rd → Wire Rd, Thrower Rd → Mossy Oak) -----
 const evacBrantley = L.polygon([
