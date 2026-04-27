@@ -65,14 +65,14 @@
   <aside id="panel">
     <header>
       <h1>Highway 82 Fire <span class="pill fire">ACTIVE</span></h1>
-      <div class="sub" style="color:#ff8a8a;font-weight:600;margin-top:4px">🚨 20,933 ac (+52% overnight) · Spot fires Hwy 32 MM12</div>
-      <div class="sub">Brantley · Wayne · Glynn Counties, GA · updated Apr 26, 2026 · 8:25 AM</div>
+      <div class="sub" style="color:#ff8a8a;font-weight:600;margin-top:4px">🚨 22,615 ac · 6% contained · Manningtown evac added</div>
+      <div class="sub">Brantley · Wayne · Glynn Counties, GA · updated Apr 26, 2026 · 6:55 PM</div>
     </header>
 
     <div class="section">
       <h2>Fire status</h2>
-      <div class="stat"><span class="k">Size</span><span class="v">~20,933 acres</span></div>
-      <div class="stat"><span class="k">Containment</span><span class="v" style="color:#ffb199">7% ↓</span></div>
+      <div class="stat"><span class="k">Size</span><span class="v">~22,615 acres</span></div>
+      <div class="stat"><span class="k">Containment</span><span class="v" style="color:#ffb199">6% ↓</span></div>
       <div class="stat"><span class="k">Perimeter</span><span class="v">14.8 sq mi</span></div>
       <div class="stat"><span class="k">Homes destroyed (region)</span><span class="v">87+</span></div>
       <div class="stat"><span class="k">Started</span><span class="v">Apr 21, 2026</span></div>
@@ -82,7 +82,7 @@
 
     <div class="section">
       <h2>Distances via Hwy 82</h2>
-      <div class="stat"><span class="k">Fire edge → home (straight line)</span><span class="v" style="color:#ffb199">9.2 mi ↓</span></div>
+      <div class="stat"><span class="k">Fire edge → home (straight line)</span><span class="v" style="color:#ffb199">9.0 mi</span></div>
       <div class="stat"><span class="k">Fire edge → home (driving via Hwy 82)</span><span class="v" id="d1">—</span></div>
       <div class="stat"><span class="k">Fire epicenter (Atkinson) → home (driving)</span><span class="v" id="d2">—</span></div>
       <div class="sub" style="margin-top:6px">Driving via US‑82 / I‑95. The orange dashed line on the map is straight-line; blue lines are road routes.</div>
@@ -172,19 +172,20 @@ L.control.layers({ "Dark": dark, "Satellite": sat }, null, {position:'topright',
 
 // ----- Approx fire perimeter (digitized from descriptions: from Hwy 110 corridor near Atkinson north toward Browntown / Lane Cemetery, east of Satilla River) -----
 const perimeter = L.polygon([
-  [31.2000, -81.8950],  // SW: Atkinson / Hwy 110 south
-  [31.1900, -81.8500],  // S: south of Hwy 82 toward Satilla
-  [31.1900, -81.8100],  // SSE: pushed slightly south
-  [31.2050, -81.7700],  // SE: past Browntown Rd
-  [31.2300, -81.7400],  // ENE: toward Hwy 32 MM12 area
-  [31.2700, -81.7350],  // NE: Hwy 32 MM12 spot fires zone
-  [31.3000, -81.7600],  // N: Wayne County advance
-  [31.3300, -81.8100],  // N: deeper into Wayne
-  [31.3250, -81.8650],  // NW: Wayne/Brantley line further N
-  [31.2950, -81.8950],  // W: Hwy 110 north
-  [31.2500, -81.9000]   // W
+  [31.1950, -81.8950],  // SW
+  [31.1850, -81.8500],  // S
+  [31.1850, -81.8050],  // SSE
+  [31.2000, -81.7650],  // SE
+  [31.2300, -81.7400],  // ENE
+  [31.2700, -81.7300],  // NE: Hwy 32 MM12
+  [31.3050, -81.7500],  // N: Wayne
+  [31.3400, -81.7900],  // N: Manningtown area
+  [31.3450, -81.8400],  // N: deep Wayne
+  [31.3300, -81.8800],  // NW: Wayne/Brantley line N
+  [31.2950, -81.9000],  // W
+  [31.2500, -81.9050]   // W
 ], { color:'#ff5630', weight:2, fillColor:'#ff5630', fillOpacity:.35, className:'fire-perim' })
-  .bindPopup('<h3>Fire perimeter (approx.)</h3><p>~20,933 acres · 7% contained. Grew +52% overnight Apr 25–26. Crossed Browntown Rd in several places; 3 large spot fires reported on both sides of Hwy 32 at Mile Marker 12.</p>');
+  .bindPopup('<h3>Fire perimeter (approx.)</h3><p>~22,615 acres · 6% contained (Apr 26 PM). Fire crossed Hwy 32 to the north into Wayne County; well established east of Browntown Rd. Manningtown community now under mandatory evacuation.</p>');
 
 // ----- Brantley mandatory evacuation zone (expanded Apr 25 — added Little Memorial Rd → Wire Rd, Thrower Rd → Mossy Oak) -----
 const evacBrantley = L.polygon([
@@ -203,18 +204,18 @@ const evacBrantley = L.polygon([
     '<p><b>Apr 25 expansion:</b> County line near Little Memorial Rd → Wire Rd, between Hwy 32 and Post Rd, extending north back to county line; Thrower Rd → Mossy Oak.</p>'+
     '<p>Curfew 8:30 PM – 6:30 AM east of the Satilla River.</p>');
 
-// ----- Wayne County MANDATORY evacuation (issued Apr 25, 2026) -----
-// From Brantley County Line at Wire Rd, to Post Rd, to Ten Mile Rd
+// ----- Wayne County MANDATORY evacuation (Apr 25 + Apr 26 Manningtown expansion) -----
 const evacWayne = L.polygon([
   [31.2900, -81.8400],   // Brantley line at Wire Rd
   [31.2950, -81.7900],   // east toward Post Rd
   [31.3250, -81.7950],   // north along Post Rd
   [31.3400, -81.8350],   // Ten Mile Rd
-  [31.3300, -81.8700],   // back west
+  [31.3450, -81.8650],   // expanded N for Manningtown
+  [31.3300, -81.8800],   // back west
   [31.3000, -81.8650]    // back to county line
 ], { color:'#ef4444', weight:2, dashArray:'4,3', fillColor:'#ef4444', fillOpacity:.28 })
   .bindPopup('<h3 style="color:#ff8a8a">🚨 Wayne County — MANDATORY EVACUATION</h3>'+
-    '<p><b>Issued Saturday, April 25, 2026.</b> From Brantley County line at Wire Rd, to Post Rd, to Ten Mile Rd.</p>'+
+    '<p><b>Issued Apr 25, expanded Apr 26.</b> From Brantley County line at Wire Rd, to Post Rd, to Ten Mile Rd — plus the entire <b>Manningtown community off Browntown Rd</b> (added Apr 26 PM).</p>'+
     '<p>Source: Watch Duty / Wayne County EMA.</p>');
 
 // ----- Glynn County MANDATORY evacuation (issued Apr 25, 2026) -----
@@ -307,8 +308,8 @@ L.marker(HOME, {
 }).addTo(map);
 
 // Fire-to-home distance: line from closest perimeter vertex to home, with mid-line label
-const FIRE_EDGE_NEAREST = [31.230, -81.740]; // closest perimeter vertex after Apr 26 AM expansion (Hwy 32 MM12)
-const FIRE_HOME_MILES = 9.2;
+const FIRE_EDGE_NEAREST = [31.270, -81.730]; // closest perimeter vertex after Apr 26 PM expansion (Hwy 32 MM12 / Manningtown)
+const FIRE_HOME_MILES = 9.0;
 const distLine = L.polyline([FIRE_EDGE_NEAREST, HOME], {color:'#ff5630', weight:2, dashArray:'8,6', opacity:.85}).addTo(map);
 const MID = [(FIRE_EDGE_NEAREST[0]+HOME[0])/2, (FIRE_EDGE_NEAREST[1]+HOME[1])/2];
 L.marker(MID, {
