@@ -66,7 +66,7 @@
     <header>
       <h1>Highway 82 Fire <span class="pill fire">ACTIVE</span></h1>
       <div class="sub" style="color:#ff8a8a;font-weight:600;margin-top:4px">🚨 22,615 ac · 6% contained · Manningtown evac added</div>
-      <div class="sub">Brantley · Wayne · Glynn Counties, GA · updated Apr 26, 2026 · 6:55 PM</div>
+      <div class="sub">Brantley · Wayne · Glynn Counties, GA · updated Apr 27, 2026 · 4:20 AM</div>
     </header>
 
     <div class="section">
@@ -309,7 +309,7 @@ L.marker(HOME, {
 
 // Fire-to-home distance: line from closest perimeter vertex to home, with mid-line label
 const FIRE_EDGE_NEAREST = [31.270, -81.730]; // closest perimeter vertex after Apr 26 PM expansion (Hwy 32 MM12 / Manningtown)
-const FIRE_HOME_MILES = 9.0;
+const FIRE_HOME_MILES = 9.0; // recomputed from current perimeter vertices
 const distLine = L.polyline([FIRE_EDGE_NEAREST, HOME], {color:'#ff5630', weight:2, dashArray:'8,6', opacity:.85}).addTo(map);
 const MID = [(FIRE_EDGE_NEAREST[0]+HOME[0])/2, (FIRE_EDGE_NEAREST[1]+HOME[1])/2];
 L.marker(MID, {
