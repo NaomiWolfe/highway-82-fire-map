@@ -66,7 +66,7 @@
     <header>
       <h1>Highway 82 Fire <span class="pill fire">ACTIVE</span></h1>
       <div class="sub" style="color:#ff8a8a;font-weight:600;margin-top:4px">🚨 22,615 ac · 6% contained · Manningtown evac added</div>
-      <div class="sub">Brantley · Wayne · Glynn Counties, GA · updated Apr 27, 2026 · 4:20 AM</div>
+      <div class="sub">Brantley · Wayne · Glynn Counties, GA · updated Apr 27, 2026 · 8:15 AM</div>
     </header>
 
     <div class="section">
@@ -90,11 +90,11 @@
 
     <div class="section">
       <h2>Projected scenarios</h2>
-      <div class="sub" style="margin-bottom:8px">Wind-driven spread cones from the current eastern fire edge under three plausible 24–48 hr scenarios. Cone radius = ~3 mph spread × duration. Switch scenarios:</div>
+      <div class="sub" style="margin-bottom:8px">Wind-driven spread cones from the current eastern fire edge under three NWS-forecast scenarios. Cone radius = ~3 mph spread × duration. Switch scenarios:</div>
       <div id="scenario-buttons" style="display:flex;gap:6px;flex-wrap:wrap">
-        <button class="scn" data-s="current">Current SW wind</button>
-        <button class="scn" data-s="shift">East-shift (worst case)</button>
-        <button class="scn" data-s="sunday">Sunday W/NW + rain</button>
+        <button class="scn" data-s="current">AM: NE wind</button>
+        <button class="scn" data-s="shift">PM/Tonight: E wind (forecast)</button>
+        <button class="scn" data-s="sunday">Wed: SW + rain</button>
         <button class="scn" data-s="none">Hide</button>
       </div>
       <div id="scenario-desc" class="sub" style="margin-top:8px"></div>
@@ -494,27 +494,27 @@ function makeCone(origin, bearing, lengthMi, halfAngleDeg){
 
 const scenarios = {
   current: {
-    label: 'Current SW wind (6 mph, gusts to 20)',
-    desc: 'SW wind through Saturday night pushes the fire toward the ENE — same direction as your home. 24 hr cone reaches partway across Brantley but well short of Glynn at modeled spread.',
-    bearing: 45,    // wind from SW → blowing to NE
-    lengthMi: 6,    // ~3 mph aligned spread × ~24 hr discounted for fuel/firebreaks
+    label: 'This morning: NE 6–9 mph',
+    desc: 'NE wind this morning is pushing fire/smoke SW — away from us. Cone trends toward the SW (Camden County direction). Smoke through Brunswick still possible with the morning NE component.',
+    bearing: 225,   // wind from NE → blowing to SW
+    lengthMi: 5,
     half: 25,
     color: '#f59e0b'
   },
   shift: {
-    label: 'East-shift (worst case)',
-    desc: 'County manager warned an easterly wind shift could push fire across the Satilla River. This cone shows a 36 hr eastward run from the current edge — the trajectory officials are watching.',
-    bearing: 90,
-    lengthMi: 9,
+    label: 'This afternoon/tonight: E 8–9 mph (NWS forecast)',
+    desc: 'NWS forecast as of 7 AM Mon now shows wind turning E from about 2 PM today through tonight, then continuing E Tuesday. This is the easterly shift county officials warned about — would push fire/smoke toward Glynn County. Cone shows a westerly run from the current eastern edge under sustained E wind.',
+    bearing: 270,   // wind from E → blowing to W
+    lengthMi: 8,
     half: 30,
     color: '#ef4444'
   },
   sunday: {
-    label: 'Sunday W/NW + 30–40% rain',
-    desc: 'Forecast wind shifts to W then NW Sunday with rising humidity and a 30–40% rain chance. Spread should slow; cone shown is smaller and trends ESE/SE.',
-    bearing: 120,
+    label: 'Wednesday: SW + rain chance',
+    desc: 'Forecast wind shifts to SW Wednesday with a slight chance of rain showers and thunderstorms. Spread should slow with rising humidity; cone trends NE but is smaller.',
+    bearing: 45,
     lengthMi: 4,
-    half: 35,
+    half: 30,
     color: '#10b981'
   }
 };
@@ -537,7 +537,7 @@ function drawScenario(key){
 document.querySelectorAll('button.scn').forEach(b => {
   b.addEventListener('click', () => drawScenario(b.dataset.s));
 });
-drawScenario('current');
+drawScenario('shift');
 
 // Now draw the trigger ring (uses destPoint defined above)
 const triggerRing = L.polygon(circlePoints(HOME, TRIGGER_MI), {
