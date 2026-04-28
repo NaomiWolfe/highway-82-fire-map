@@ -65,8 +65,9 @@
   <aside id="panel">
     <header>
       <h1>Highway 82 Fire <span class="pill fire">ACTIVE</span></h1>
-      <div class="sub" style="color:#ff8a8a;font-weight:600;margin-top:4px">🚨 22,615 ac · 6% contained · Manningtown evac added</div>
-      <div class="sub">Brantley · Wayne · Glynn Counties, GA · updated Apr 27, 2026 · 8:15 AM</div>
+      <div class="sub" style="color:#86efac;font-weight:600;margin-top:4px">🟢 Glynn mandatory evac downgraded to VOLUNTARY (Apr 27 PM)</div>
+      <div class="sub" style="color:#ffb199;margin-top:2px">22,614 ac · 6% contained · no growth today</div>
+      <div class="sub">Brantley · Wayne · Glynn Counties, GA · updated Apr 27, 2026 · 8:10 PM</div>
     </header>
 
     <div class="section">
@@ -83,8 +84,8 @@
     <div class="section">
       <h2>Distances to Oak Grove</h2>
       <div class="stat"><span class="k">🔥 Flames (straight line)</span><span class="v" style="color:#ffb199">~9.0 mi</span></div>
-      <div class="stat"><span class="k">🚨 Glynn mandatory evac edge</span><span class="v" style="color:#ff8a8a">~5.3 mi</span></div>
-      <div class="stat"><span class="k">⚠️ Glynn voluntary advisory edge</span><span class="v" style="color:#facc15">~3.5 mi</span></div>
+      <div class="stat"><span class="k">⚠️ Nearest Glynn voluntary evac edge</span><span class="v" style="color:#facc15">~3.5 mi</span></div>
+      <div class="sub" style="color:#86efac;margin-top:4px">🟢 No mandatory evac in Glynn anymore (downgraded Apr 27 PM)</div>
       <div class="stat" style="margin-top:8px"><span class="k">Fire edge → home (driving via Hwy 82)</span><span class="v" id="d1">—</span></div>
       <div class="stat"><span class="k">Fire epicenter (Atkinson) → home (driving)</span><span class="v" id="d2">—</span></div>
       <div class="sub" style="margin-top:6px">Straight-line distances measured to nearest edge of each zone. The orange dashed line on the map is straight-line to flames; blue lines are road routes.</div>
@@ -114,8 +115,8 @@
       <label class="toggle"><input type="checkbox" id="t-perimeter" checked> Fire perimeter (approx.)</label>
       <label class="toggle"><input type="checkbox" id="t-evac" checked> Brantley mandatory evacuations</label>
       <label class="toggle"><input type="checkbox" id="t-wayne-mand" checked> 🚨 Wayne MANDATORY evac (Apr 25)</label>
-      <label class="toggle"><input type="checkbox" id="t-glynn-mand" checked> 🚨 Glynn MANDATORY evac (Apr 25)</label>
-      <label class="toggle"><input type="checkbox" id="t-glynn-vol" checked> ⚠️ Glynn VOLUNTARY advisory (Apr 25)</label>
+      <label class="toggle"><input type="checkbox" id="t-glynn-mand" checked> ⚠️ Glynn voluntary (was mandatory, downgraded Apr 27)</label>
+      <label class="toggle"><input type="checkbox" id="t-glynn-vol" checked> ⚠️ Glynn voluntary advisory (Apr 25)</label>
       <label class="toggle"><input type="checkbox" id="t-glynn" checked> Glynn County readiness zone</label>
       <label class="toggle"><input type="checkbox" id="t-routes" checked> Hwy 82 evacuation routes</label>
       <label class="toggle"><input type="checkbox" id="t-closures" checked> Road closures</label>
@@ -229,9 +230,9 @@ const evacGlynnMandatory = L.polygon([
   [31.2935, -81.6896], // up to Thalman Park area
   [31.2870, -81.7550], // Bladen Rd west
   [31.2440, -81.7640]  // back to Old Post Rd
-], { color:'#ef4444', weight:2, fillColor:'#ef4444', fillOpacity:.32 })
-  .bindPopup('<h3 style="color:#ff8a8a">🚨 Glynn County — MANDATORY EVACUATION</h3>'+
-    '<p><b>Issued Saturday, April 25, 2026.</b> Order applies to residents within: Old Post Rd → Hwy 32 → Thalman Park Ln → Bladen Rd → back to Old Post Rd. This is the NW corner of Glynn near Thalmann, closest to the Brantley line.</p>'+
+], { color:'#fbbf24', weight:2, dashArray:'6,4', fillColor:'#fbbf24', fillOpacity:.22 })
+  .bindPopup('<h3 style="color:#fbbf24">⚠️ Glynn County — VOLUNTARY evacuation (downgraded Apr 27 PM)</h3>'+
+    '<p><b>Downgraded from mandatory to voluntary on Monday, April 27, 2026.</b> Area: Old Post Rd → Hwy 32 → Thalman Park Ln → Bladen Rd → back to Old Post Rd. Roads at Old Post/Hwy 82, Old Post/Hwy 32, Thalman Park/Hwy 32, and Bladen/Hwy 99 are now reopened.</p>'+
     '<p>Source: Glynn County Communications.</p>');
 
 // ----- Glynn County VOLUNTARY evacuation advisory (issued Apr 25, 2026 evening) -----
@@ -420,9 +421,9 @@ L.marker([31.3200, -81.8300], {
   interactive:false
 }).addTo(map);
 
-// Permanent label on the new mandatory Glynn zone
+// Permanent label on the Glynn zone (downgraded to voluntary Apr 27 PM)
 L.marker([31.272, -81.730], {
-  icon: L.divIcon({className:'dist-label', html:'🚨 GLYNN MANDATORY EVAC (Apr 25)', iconSize:[null,null], iconAnchor:[110, 12]}),
+  icon: L.divIcon({className:'dist-label', html:'⚠️ GLYNN VOLUNTARY (was mandatory, downgraded Apr 27)', iconSize:[null,null], iconAnchor:[140, 12]}),
   interactive:false
 }).addTo(map);
 
