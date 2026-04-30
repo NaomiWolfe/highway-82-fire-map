@@ -118,4 +118,4 @@ If you build something similar for your area and want to compare notes, I'd love
 
 ---
 
-— Naomi Wolfe · [@NaomiWolfe](https://github.com/NaomiWolfe) · Brunswick, GA 🌾
+— Naomi Latini Wolfe · [naomilatiniwolfe.com](https://naomilatiniwolfe.com) · [@NaomiWolfe](https://github.com/NaomiWolfe) · Brunswick, GA 🌾
